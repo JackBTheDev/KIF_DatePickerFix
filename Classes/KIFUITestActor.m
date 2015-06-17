@@ -544,15 +544,44 @@
                 } else if ([pickerView.delegate respondsToSelector:@selector(pickerView:viewForRow:forComponent:reusingView:)]) {
                     
                     UIView *rowView = [pickerView.delegate pickerView:pickerView viewForRow:rowIndex forComponent:componentIndex reusingView:nil];
+                    
                     UILabel *label;
+                    NSString *labelText = nil;
+                    
                     if ([rowView isKindOfClass:[UILabel class]] ) {
                         label = (id)rowView;
+                        labelText = label.text;
                     } else {
                         // This delegate inserts views directly, so try to figure out what the title is by looking for a label
+                        
                         NSArray *labels = [rowView subviewsWithClassNameOrSuperClassNamePrefix:@"UILabel"];
-                        label = (labels.count > 0 ? labels[0] : nil);
+                        
+                        if (labels.count == 1){
+                            label = labels[0];
+                            labelText = label.text;
+                        }
+                        else if (labels.count >= 2 && [pickerView isKindOfClass:[UIDatePicker class]]){
+                            UIDatePickerMode mode = ((UIDatePicker *)pickerView).datePickerMode;
+                            
+                            if (mode == UIDatePickerModeDateAndTime){
+                                
+                                label = labels[0];
+                                NSString *dayOfWeekString = ((UILabel *)labels[0]).text;
+                                NSString *calendarDayString = ((UILabel *)labels[1]).text;
+                                //combine the two labels text
+                                labelText = [dayOfWeekString stringByAppendingFormat:@" %@", calendarDayString];
+                            }
+                        }
+                        else{
+                            // :|
+                            label = nil;
+                        }
+                        
+                        //previous evaluation
+                        //label = (labels.count > 0 ? labels[0] : nil);
                     }
-                    rowTitle = label.text;
+                    
+                    rowTitle = labelText;
                 }
                 
                 if (rowIndex==[pickerView selectedRowInComponent:componentIndex] && [rowTitle isEqual:pickerColumnValues[componentIndex]]){
